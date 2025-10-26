@@ -108,6 +108,48 @@ const Dashboard = ({ user, onLogout }) => {
     workersRef.current = [];
     setScanning(false);
   };
+  
+  const handleSupportSubmit = async (e) => {
+    e.preventDefault();
+    setSendingSupport(true);
+
+    try {
+      await axios.post(`${API}/support/message`, {
+        message: supportMessage
+      });
+      
+      toast.success("Support message sent successfully!");
+      setSupportMessage("");
+      setShowSupport(false);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to send message");
+    } finally {
+      setSendingSupport(false);
+    }
+  };
+  
+  const handleTestimonialSubmit = async (e) => {
+    e.preventDefault();
+    setSendingTestimonial(true);
+
+    try {
+      await axios.post(`${API}/testimonials/create`, {
+        name: testimonialName,
+        message: testimonialMessage,
+        rating: testimonialRating
+      });
+      
+      toast.success("Testimonial submitted for approval!");
+      setTestimonialName("");
+      setTestimonialMessage("");
+      setTestimonialRating(5);
+      setShowTestimonial(false);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to submit testimonial");
+    } finally {
+      setSendingTestimonial(false);
+    }
+  };
 
   const createInvoice = async () => {
     try {

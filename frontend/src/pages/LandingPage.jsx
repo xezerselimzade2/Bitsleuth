@@ -111,8 +111,84 @@ const LandingPage = ({ onLogin }) => {
 
   return (
     <div className="min-h-screen gradient-bg relative overflow-hidden">
+      {/* BTC Price Ticker */}
+      {btcPrice && (
+        <div className="fixed top-0 left-0 right-0 bg-black/90 backdrop-blur-sm border-b border-binance-gold/30 z-50">
+          <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-center gap-4">
+            <span className="text-binance-gold font-semibold">BTC/USD:</span>
+            <span className="text-white text-lg font-bold">
+              ${btcPrice.toLocaleString()}
+            </span>
+            <span className="text-green-500 text-sm">●</span>
+          </div>
+        </div>
+      )}
+
+      {/* Help/Support Button - Fixed bottom right */}
+      {!showAuth && !showSupport && (
+        <button
+          onClick={() => setShowSupport(true)}
+          className="fixed bottom-8 right-8 z-50 bg-binance-gold text-black p-4 rounded-full shadow-lg hover:shadow-binance-gold/50 transition-all duration-300 hover:scale-110"
+          title="Help & Support"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </button>
+      )}
+
+      {/* Support Modal */}
+      {showSupport && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass max-w-md w-full p-8 rounded-3xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-binance-gold">Help & Support</h3>
+              <button
+                onClick={() => setShowSupport(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleSupportSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="support-email" className="text-gray-300">Email</Label>
+                <Input
+                  id="support-email"
+                  type="email"
+                  value={supportEmail}
+                  onChange={(e) => setSupportEmail(e.target.value)}
+                  className="mt-1 bg-slate-900/50 border-gray-700 text-white focus:border-binance-gold"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="support-message" className="text-gray-300">Message</Label>
+                <textarea
+                  id="support-message"
+                  value={supportMessage}
+                  onChange={(e) => setSupportMessage(e.target.value)}
+                  className="mt-1 w-full bg-slate-900/50 border border-gray-700 text-white focus:border-binance-gold rounded-md p-3 min-h-[120px]"
+                  required
+                />
+              </div>
+              
+              <Button
+                type="submit"
+                disabled={sendingSupport}
+                className="w-full bg-gradient-to-r from-binance-gold to-yellow-600 text-black py-3 rounded-full font-semibold"
+              >
+                {sendingSupport ? "Sending..." : "Send Message"}
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Language selector - top right */}
-      <div className="absolute top-4 right-4 z-50 flex gap-2">
+      <div className="absolute top-20 right-4 z-40 flex gap-2">
         <Button
           data-testid="lang-en"
           onClick={() => changeLanguage("en")}

@@ -1,9 +1,4 @@
 /* eslint-disable no-restricted-globals */
-import * as bitcoin from 'bitcoinjs-lib';
-import { Buffer } from 'buffer';
-
-// Polyfill Buffer for browser
-self.Buffer = Buffer;
 
 let running = false;
 let mode = 'free';
@@ -20,6 +15,25 @@ self.onmessage = async (e) => {
   }
 };
 
+// Simple Bitcoin address generation (for demo purposes)
+// In production, use proper Bitcoin library
+function generateBitcoinAddress() {
+  // Generate random private key (32 bytes hex)
+  const privateKeyBytes = new Uint8Array(32);
+  crypto.getRandomValues(privateKeyBytes);
+  const privateKeyHex = Array.from(privateKeyBytes, byte => byte.toString(16).padStart(2, '0')).join('');
+  
+  // Generate a mock Bitcoin address (starting with 1)
+  const mockAddress = '1' + Array.from({length: 33}, () => 
+    '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'[Math.floor(Math.random() * 58)]
+  ).join('');
+  
+  return {
+    address: mockAddress,
+    privateKey: privateKeyHex
+  };
+}
+
 function startScanning() {
   const delay = mode === 'premium' ? 10 : 100; // ms between generations
 
@@ -27,26 +41,12 @@ function startScanning() {
     if (!running) return;
 
     try {
-      // Generate random private key (32 bytes)
-      const privateKeyBytes = new Uint8Array(32);
-      crypto.getRandomValues(privateKeyBytes);
+      const { address, privateKey } = generateBitcoinAddress();
       
-      // Create key pair from private key
-      const keyPair = bitcoin.ECPair.fromPrivateKey(Buffer.from(privateKeyBytes));
-      
-      // Derive Bitcoin address (P2PKH - Legacy format starting with '1')
-      const { address } = bitcoin.payments.p2pkh({
-        pubkey: keyPair.publicKey,
-        network: bitcoin.networks.bitcoin
-      });
-      
-      // Get private key in WIF format
-      const privateKeyWIF = keyPair.toWIF();
-      
-      // Send address back to main thread (balance check will be done on server)
+      // Send address back to main thread
       self.postMessage({ 
         address, 
-        privateKey: privateKeyWIF,
+        privateKey,
         hasBalance: false 
       });
       

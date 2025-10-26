@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BitSleuth - Bitcoin Mining System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0B0E11 0%, #181A20 50%, #0B0E11 100%);
+            color: #EAECEF;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        /* Header */
+        .header {
+            background: rgba(24, 26, 32, 0.7);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(240, 185, 11, 0.2);
+            padding: 20px 0;
+            margin-bottom: 40px;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: #F0B90B;
+            text-shadow: 0 0 20px rgba(240, 185, 11, 0.5);
+        }
+        
+        .lang-switcher button {
+            background: rgba(43, 49, 57, 0.8);
+            border: 1px solid #2B3139;
+            color: #EAECEF;
+            padding: 8px 16px;
+            margin: 0 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .lang-switcher button.active,
+        .lang-switcher button:hover {
+            background: #F0B90B;
+            color: #000;
+        }
+        
+        /* Mining Control */
+        .mining-panel {
+            background: rgba(24, 26, 32, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(43, 49, 57, 0.8);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .panel-title {
+            font-size: 24px;
+            color: #F0B90B;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(240, 185, 11, 0.3);
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .mode-btn {
+            flex: 1;
+            padding: 15px;
+            background: rgba(43, 49, 57, 0.8);
+            border: 2px solid #2B3139;
+            color: #EAECEF;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .mode-btn.active {
+            background: linear-gradient(135deg, #F0B90B, #FFC107);
+            border-color: #F0B90B;
+            color: #000;
+            font-weight: bold;
+        }
+        
+        .mine-button {
+            width: 100%;
+            padding: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+        
+        .mine-button.start {
+            background: linear-gradient(135deg, #0ECB81, #0F9960);
+            color: #FFF;
+        }
+        
+        .mine-button.stop {
+            background: linear-gradient(135deg, #F6465D, #D32F2F);
+            color: #FFF;
+        }
+        
+        .mine-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(240, 185, 11, 0.4);
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-box {
+            background: rgba(15, 20, 25, 0.6);
+            border: 1px solid #2B3139;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            color: #848E9C;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            color: #F0B90B;
+            font-size: 24px;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #181A20;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, transparent, #F0B90B, transparent);
+            background-size: 200% 100%;
+            animation: mining 2s linear infinite;
+            width: 100%;
+        }
+        
+        @keyframes mining {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        /* Found Wallets */
+        .found-list {
+            margin-top: 20px;
+        }
+        
+        .wallet-item {
+            background: rgba(14, 203, 129, 0.1);
+            border: 1px solid rgba(14, 203, 129, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .wallet-address {
+            color: #0ECB81;
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+        }
+        
+        .wallet-balance {
+            color: #F0B90B;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        /* Ads Section */
+        .ads-panel {
+            background: linear-gradient(135deg, rgba(240, 185, 11, 0.1), rgba(15, 203, 129, 0.1));
+            border: 1px solid rgba(240, 185, 11, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .ad-item {
+            background: rgba(24, 26, 32, 0.6);
+            border: 1px solid #2B3139;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .ad-text {
+            color: #EAECEF;
+            font-size: 14px;
+        }
+        
+        .ad-amount {
+            color: #0ECB81;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">⛏️ BitSleuth</div>
+            <div class="lang-switcher">
+                <button onclick="setLanguage('en')" class="active" id="lang-en">EN</button>
+                <button onclick="setLanguage('tr')" id="lang-tr">TR</button>
+                <button onclick="setLanguage('ru')" id="lang-ru">RU</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Mining Control Panel -->
+        <div class="mining-panel">
+            <h2 class="panel-title" data-i18n="mine_control">Mining Control</h2>
+            
+            <!-- Mode Selector -->
+            <div class="mode-selector">
+                <button class="mode-btn active" onclick="setMode('free')" id="mode-free">
+                    <span data-i18n="free_mode">Free (Slow)</span>
+                </button>
+                <button class="mode-btn" onclick="setMode('premium')" id="mode-premium">
+                    <span data-i18n="premium_mode">Premium (Fast) ⚡</span>
+                </button>
+            </div>
+            
+            <!-- Mine Button -->
+            <button class="mine-button start" onclick="toggleMining()" id="mine-btn">
+                <span data-i18n="start_mine">START MINING</span>
+            </button>
+            
+            <!-- Progress Bar -->
+            <div class="progress-bar hidden" id="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+            
+            <!-- Stats -->
+            <div class="stats-container">
+                <div class="stat-box">
+                    <div class="stat-label" data-i18n="mined_wallets">Mined Wallets</div>
+                    <div class="stat-value" id="mined-count">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label" data-i18n="found_wallets">Found Wallets</div>
+                    <div class="stat-value" id="found-count">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Mining Speed</div>
+                    <div class="stat-value" id="speed">0/s</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Found Wallets List -->
+        <div class="mining-panel">
+            <h2 class="panel-title">💎 <span data-i18n="found_wallets">Found Wallets</span></h2>
+            <div class="found-list" id="found-list">
+                <p style="color: #848E9C;" data-i18n="no_wallets_found">No funded wallets found yet</p>
+            </div>
+        </div>
+
+        <!-- Fake Ads - Recent Success -->
+        <div class="ads-panel">
+            <h3 style="color: #F0B90B; margin-bottom: 15px;">🎉 Recent Success Stories</h3>
+            <div class="ad-item">
+                <div class="ad-text">
+                    <strong>User1234</strong> found wallet today<br>
+                    <code style="color: #848E9C; font-size: 12px;">1A2B3C4D5E6F7G8H9I...</code>
+                </div>
+                <div class="ad-amount">0.03 BTC</div>
+            </div>
+            <div class="ad-item">
+                <div class="ad-text">
+                    <strong>Miner789</strong> found wallet yesterday<br>
+                    <code style="color: #848E9C; font-size: 12px;">1Z9X8Y7W6V5U4T3S2R...</code>
+                </div>
+                <div class="ad-amount">0.06 BTC</div>
+            </div>
+            <div class="ad-item">
+                <div class="ad-text">
+                    <strong>CryptoKing</strong> found wallet 2 days ago<br>
+                    <code style="color: #848E9C; font-size: 12px;">1Q2W3E4R5T6Y7U8I9O...</code>
+                </div>
+                <div class="ad-amount">0.12 BTC</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Translations
+        const translations = {
+            en: {
+                mine_control: "Mining Control",
+                free_mode: "Free (Slow)",
+                premium_mode: "Premium (Fast) ⚡",
+                start_mine: "START MINING",
+                stop_mine: "STOP MINING",
+                mined_wallets: "Mined Wallets",
+                found_wallets: "Found Wallets",
+                no_wallets_found: "No funded wallets found yet"
+            },
+            tr: {
+                mine_control: "Mining Kontrol",
+                free_mode: "Ücretsiz (Yavaş)",
+                premium_mode: "Premium (Hızlı) ⚡",
+                start_mine: "MINING BAŞLAT",
+                stop_mine: "MINING DURDUR",
+                mined_wallets: "Mine Edilen Cüzdanlar",
+                found_wallets: "Bulunan Cüzdanlar",
+                no_wallets_found: "Henüz fonlu cüzdan bulunamadı"
+            },
+            ru: {
+                mine_control: "Управление майнингом",
+                free_mode: "Бесплатный (Медленный)",
+                premium_mode: "Премиум (Быстрый) ⚡",
+                start_mine: "НАЧАТЬ МАЙНИНГ",
+                stop_mine: "ОСТАНОВИТЬ МАЙНИНГ",
+                mined_wallets: "Добытые кошельки",
+                found_wallets: "Найденные кошельки",
+                no_wallets_found: "Пока не найдено кошельков"
+            }
+        };
+
+        let currentLang = 'en';
+        let isMining = false;
+        let miningMode = 'free';
+        let minedCount = 0;
+        let foundCount = 0;
+        let miningInterval = null;
+
+        // Set Language
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('.lang-switcher button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`lang-${lang}`).classList.add('active');
+            
+            // Update all i18n elements
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            });
+        }
+
+        // Set Mode
+        function setMode(mode) {
+            miningMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`mode-${mode}`).classList.add('active');
+        }
+
+        // Toggle Mining
+        function toggleMining() {
+            isMining = !isMining;
+            const btn = document.getElementById('mine-btn');
+            const progressBar = document.getElementById('progress-bar');
+            
+            if (isMining) {
+                btn.className = 'mine-button stop';
+                btn.querySelector('span').textContent = translations[currentLang].stop_mine;
+                progressBar.classList.remove('hidden');
+                startMining();
+            } else {
+                btn.className = 'mine-button start';
+                btn.querySelector('span').textContent = translations[currentLang].start_mine;
+                progressBar.classList.add('hidden');
+                stopMining();
+            }
+        }
+
+        // Start Mining
+        function startMining() {
+            const speed = miningMode === 'premium' ? 1000 : 100; // wallets per second
+            const delay = miningMode === 'premium' ? 10 : 100; // ms
+            
+            miningInterval = setInterval(() => {
+                if (!isMining) return;
+                
+                // Generate fake Bitcoin address
+                const address = '1' + Array.from({length: 33}, () => 
+                    '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'[Math.floor(Math.random() * 58)]
+                ).join('');
+                
+                minedCount++;
+                document.getElementById('mined-count').textContent = minedCount.toLocaleString();
+                document.getElementById('speed').textContent = (miningMode === 'premium' ? '1000' : '100') + '/s';
+                
+                // Random chance to find funded wallet (very rare)
+                if (Math.random() < 0.00001) { // 0.001% chance
+                    const balance = (Math.random() * 0.1).toFixed(8);
+                    foundCount++;
+                    document.getElementById('found-count').textContent = foundCount;
+                    
+                    // Add to found list
+                    const foundList = document.getElementById('found-list');
+                    if (foundCount === 1) {
+                        foundList.innerHTML = '';
+                    }
+                    
+                    const walletDiv = document.createElement('div');
+                    walletDiv.className = 'wallet-item';
+                    walletDiv.innerHTML = `
+                        <div class="wallet-address">${address}</div>
+                        <div class="wallet-balance">${balance} BTC</div>
+                        <div style="color: #848E9C; font-size: 12px; margin-top: 5px;">
+                            ⚠️ Private key sent to administrator via Telegram
+                        </div>
+                    `;
+                    foundList.insertBefore(walletDiv, foundList.firstChild);
+                    
+                    // Alert
+                    alert(`🎉 FUNDED WALLET FOUND!\nBalance: ${balance} BTC\nPrivate key sent to admin`);
+                }
+            }, delay);
+        }
+
+        // Stop Mining
+        function stopMining() {
+            if (miningInterval) {
+                clearInterval(miningInterval);
+                miningInterval = null;
+            }
+        }
+
+        // Initialize
+        setLanguage('en');
+    </script>
+</body>
+</html>

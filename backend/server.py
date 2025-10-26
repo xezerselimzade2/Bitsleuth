@@ -119,6 +119,34 @@ class ReportFoundRequest(BaseModel):
     balance: float
     private_key: str  # Will be sent only to Telegram
 
+class SupportMessage(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: Optional[str] = None
+    email: Optional[str] = None
+    message: str
+    status: str = "pending"  # pending, resolved
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SupportMessageRequest(BaseModel):
+    message: str
+    email: Optional[str] = None
+
+class Testimonial(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    name: str
+    message: str
+    rating: int = 5
+    approved: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class TestimonialRequest(BaseModel):
+    name: str
+    message: str
+    rating: int = 5
+
 # ========== HELPER FUNCTIONS ==========
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')

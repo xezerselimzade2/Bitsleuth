@@ -1,12 +1,17 @@
 import { useState } from "react";
 import axios from "axios";
 import { API } from "@/App";
+import { useLanguage } from "@/App";
+import { useTranslation } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 const LandingPage = ({ onLogin }) => {
+  const { language, changeLanguage } = useLanguage();
+  const t = useTranslation(language);
+  
   const [showAuth, setShowAuth] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -23,13 +28,13 @@ const LandingPage = ({ onLogin }) => {
 
       if (isLogin) {
         onLogin(response.data.token, response.data.user);
-        toast.success("Giriş başarılı!");
+        toast.success("Login successful!");
       } else {
-        toast.success("Kayıt başarılı! Lütfen e-postanızı doğrulayın.");
+        toast.success("Registration successful! Please verify your email.");
         setIsLogin(true);
       }
     } catch (error) {
-      toast.error(error.response?.data?.detail || "Bir hata oluştu");
+      toast.error(error.response?.data?.detail || "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -37,10 +42,41 @@ const LandingPage = ({ onLogin }) => {
 
   return (
     <div className="min-h-screen gradient-bg relative overflow-hidden">
+      {/* Language selector - top right */}
+      <div className="absolute top-4 right-4 z-50 flex gap-2">
+        <Button
+          data-testid="lang-en"
+          onClick={() => changeLanguage("en")}
+          variant={language === "en" ? "default" : "outline"}
+          className={language === "en" ? "bg-binance-gold text-black" : "border-gray-600 text-gray-300"}
+          size="sm"
+        >
+          EN
+        </Button>
+        <Button
+          data-testid="lang-tr"
+          onClick={() => changeLanguage("tr")}
+          variant={language === "tr" ? "default" : "outline"}
+          className={language === "tr" ? "bg-binance-gold text-black" : "border-gray-600 text-gray-300"}
+          size="sm"
+        >
+          TR
+        </Button>
+        <Button
+          data-testid="lang-ru"
+          onClick={() => changeLanguage("ru")}
+          variant={language === "ru" ? "default" : "outline"}
+          className={language === "ru" ? "bg-binance-gold text-black" : "border-gray-600 text-gray-300"}
+          size="sm"
+        >
+          RU
+        </Button>
+      </div>
+
       {/* Animated grid background */}
-      <div className="absolute inset-0 opacity-10">
+      <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
-          backgroundImage: 'linear-gradient(#00d4ff 1px, transparent 1px), linear-gradient(90deg, #00d4ff 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(#F0B90B 1px, transparent 1px), linear-gradient(90deg, #F0B90B 1px, transparent 1px)',
           backgroundSize: '50px 50px'
         }} />
       </div>
@@ -50,7 +86,7 @@ const LandingPage = ({ onLogin }) => {
         {[...Array(20)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-1 h-1 bg-cyan-400 rounded-full"
+            className="absolute w-1 h-1 bg-binance-gold rounded-full opacity-30"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -72,88 +108,85 @@ const LandingPage = ({ onLogin }) => {
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <div className="max-w-6xl w-full">
           {!showAuth ? (
-            // Hero section
             <div className="text-center space-y-8">
               <div className="inline-block mb-6">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-cyan-500/20 blur-3xl rounded-full" />
+                  <div className="absolute inset-0 bg-binance-gold/20 blur-3xl rounded-full" />
                   <h1 className="relative text-7xl sm:text-8xl lg:text-9xl font-bold neon-text mb-4">
-                    BitSleuth
+                    {t.hero_title}
                   </h1>
                 </div>
               </div>
               
-              <p className="text-xl sm:text-2xl lg:text-3xl text-cyan-300 font-light max-w-3xl mx-auto">
-                En hızlı kripto cüzdan tarama sistemi
+              <p className="text-xl sm:text-2xl lg:text-3xl text-binance-gold font-light max-w-3xl mx-auto">
+                {t.hero_subtitle}
               </p>
               
-              <p className="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto">
-                Gelişmiş algoritmalar ile Tron blockchain'de fonlu cüzdanları keşfedin.
-                Premium mod ile 10x daha hızlı tarama yapın.
+              <p className="text-base sm:text-lg text-gray-400 max-w-2xl mx-auto">
+                {t.hero_description}
               </p>
 
               <div className="flex flex-wrap gap-4 justify-center mt-12">
                 <Button
                   data-testid="get-started-btn"
                   onClick={() => setShowAuth(true)}
-                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-6 text-lg rounded-full font-semibold shadow-lg hover:shadow-cyan-500/50 transition-all duration-300"
+                  className="bg-gradient-to-r from-binance-gold to-yellow-600 hover:from-yellow-600 hover:to-binance-gold text-black px-8 py-6 text-lg rounded-full font-semibold shadow-lg hover:shadow-binance-gold/50 transition-all duration-300"
                 >
-                  Başlayın
+                  {t.get_started}
                 </Button>
               </div>
 
               {/* Features */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-20">
-                <div className="glass p-6 rounded-2xl hover:border-cyan-500/50 transition-all duration-300">
+                <div className="glass p-6 rounded-2xl hover:border-binance-gold/50 transition-all duration-300">
                   <div className="text-4xl mb-4">⚡</div>
-                  <h3 className="text-xl font-semibold mb-2 text-cyan-300">Yüksek Hız</h3>
-                  <p className="text-slate-400">Premium modda saniyede binlerce adres taraması</p>
+                  <h3 className="text-xl font-semibold mb-2 text-binance-gold">{t.feature1_title}</h3>
+                  <p className="text-gray-400">{t.feature1_desc}</p>
                 </div>
                 
-                <div className="glass p-6 rounded-2xl hover:border-cyan-500/50 transition-all duration-300">
+                <div className="glass p-6 rounded-2xl hover:border-binance-gold/50 transition-all duration-300">
                   <div className="text-4xl mb-4">🔐</div>
-                  <h3 className="text-xl font-semibold mb-2 text-cyan-300">Güvenli</h3>
-                  <p className="text-slate-400">Private key'ler hiçbir zaman sunucuya gönderilmez</p>
+                  <h3 className="text-xl font-semibold mb-2 text-binance-gold">{t.feature2_title}</h3>
+                  <p className="text-gray-400">{t.feature2_desc}</p>
                 </div>
                 
-                <div className="glass p-6 rounded-2xl hover:border-cyan-500/50 transition-all duration-300">
+                <div className="glass p-6 rounded-2xl hover:border-binance-gold/50 transition-all duration-300">
                   <div className="text-4xl mb-4">💎</div>
-                  <h3 className="text-xl font-semibold mb-2 text-cyan-300">Karlı</h3>
-                  <p className="text-slate-400">Fonlu cüzdanları bulun ve kazanın</p>
+                  <h3 className="text-xl font-semibold mb-2 text-binance-gold">{t.feature3_title}</h3>
+                  <p className="text-gray-400">{t.feature3_desc}</p>
                 </div>
               </div>
             </div>
           ) : (
-            // Auth form
             <div className="max-w-md mx-auto">
               <div className="glass p-8 rounded-3xl">
                 <h2 className="text-3xl font-bold text-center mb-6 neon-text">
-                  {isLogin ? "Giriş Yap" : "Kayıt Ol"}
+                  {isLogin ? t.login : t.register}
                 </h2>
                 
                 <form onSubmit={handleAuth} className="space-y-4">
                   <div>
-                    <Label htmlFor="email" className="text-slate-300">E-posta</Label>
+                    <Label htmlFor="email" className="text-gray-300">{t.email}</Label>
                     <Input
                       id="email"
                       data-testid="email-input"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="mt-1 bg-slate-900/50 border-slate-700 text-white focus:border-cyan-500"
+                      className="mt-1 bg-slate-900/50 border-gray-700 text-white focus:border-binance-gold"
                       required
                     />
                   </div>
                   
                   <div>
-                    <Label htmlFor="password" className="text-slate-300">Şifre</Label>
+                    <Label htmlFor="password" className="text-gray-300">{t.password}</Label>
                     <Input
                       id="password"
                       data-testid="password-input"
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="mt-1 bg-slate-900/50 border-slate-700 text-white focus:border-cyan-500"
+                      className="mt-1 bg-slate-900/50 border-gray-700 text-white focus:border-binance-gold"
                       required
                     />
                   </div>
@@ -162,9 +195,9 @@ const LandingPage = ({ onLogin }) => {
                     data-testid="auth-submit-btn"
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white py-3 rounded-full font-semibold"
+                    className="w-full bg-gradient-to-r from-binance-gold to-yellow-600 hover:from-yellow-600 hover:to-binance-gold text-black py-3 rounded-full font-semibold"
                   >
-                    {loading ? "Yükleniyor..." : isLogin ? "Giriş Yap" : "Kayıt Ol"}
+                    {loading ? t.loading : isLogin ? t.login : t.register}
                   </Button>
                 </form>
                 
@@ -172,9 +205,9 @@ const LandingPage = ({ onLogin }) => {
                   <button
                     data-testid="toggle-auth-mode-btn"
                     onClick={() => setIsLogin(!isLogin)}
-                    className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                    className="text-binance-gold hover:text-yellow-400 transition-colors"
                   >
-                    {isLogin ? "Hesabınız yok mu? Kayıt olun" : "Zaten hesabınız var mı? Giriş yapın"}
+                    {isLogin ? t.no_account : t.have_account}
                   </button>
                 </div>
                 
@@ -182,9 +215,9 @@ const LandingPage = ({ onLogin }) => {
                   <button
                     data-testid="back-to-home-btn"
                     onClick={() => setShowAuth(false)}
-                    className="text-slate-400 hover:text-slate-300 transition-colors text-sm"
+                    className="text-gray-400 hover:text-gray-300 transition-colors text-sm"
                   >
-                    ← Ana sayfaya dön
+                    {t.back_home}
                   </button>
                 </div>
               </div>

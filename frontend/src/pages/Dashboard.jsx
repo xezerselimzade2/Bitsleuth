@@ -182,6 +182,139 @@ const Dashboard = ({ user, onLogout }) => {
 
   return (
     <div className="min-h-screen gradient-bg">
+      {/* Support/Testimonial Fixed Buttons */}
+      <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-3">
+        <button
+          onClick={() => setShowSupport(true)}
+          className="bg-binance-gold text-black p-4 rounded-full shadow-lg hover:shadow-binance-gold/50 transition-all duration-300 hover:scale-110"
+          title="Help & Support"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </button>
+        
+        <button
+          onClick={() => setShowTestimonial(true)}
+          className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:shadow-green-600/50 transition-all duration-300 hover:scale-110"
+          title="Leave a Testimonial"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Support Modal */}
+      {showSupport && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass max-w-md w-full p-8 rounded-3xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-binance-gold">Help & Support</h3>
+              <button
+                onClick={() => setShowSupport(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleSupportSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="support-message" className="text-gray-300 block mb-2">Message</label>
+                <textarea
+                  id="support-message"
+                  value={supportMessage}
+                  onChange={(e) => setSupportMessage(e.target.value)}
+                  className="w-full bg-slate-900/50 border border-gray-700 text-white focus:border-binance-gold rounded-md p-3 min-h-[120px]"
+                  required
+                  placeholder="How can we help you?"
+                />
+              </div>
+              
+              <Button
+                type="submit"
+                disabled={sendingSupport}
+                className="w-full bg-gradient-to-r from-binance-gold to-yellow-600 text-black py-3 rounded-full font-semibold"
+              >
+                {sendingSupport ? "Sending..." : "Send Message"}
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Testimonial Modal */}
+      {showTestimonial && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass max-w-md w-full p-8 rounded-3xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-binance-gold">Leave a Testimonial</h3>
+              <button
+                onClick={() => setShowTestimonial(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleTestimonialSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="testimonial-name" className="text-gray-300 block mb-2">Your Name</label>
+                <input
+                  id="testimonial-name"
+                  type="text"
+                  value={testimonialName}
+                  onChange={(e) => setTestimonialName(e.target.value)}
+                  className="w-full bg-slate-900/50 border border-gray-700 text-white focus:border-binance-gold rounded-md p-3"
+                  required
+                  placeholder="John Doe"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="testimonial-rating" className="text-gray-300 block mb-2">Rating</label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setTestimonialRating(star)}
+                      className={`text-3xl transition-colors ${star <= testimonialRating ? 'text-binance-gold' : 'text-gray-600'}`}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <label htmlFor="testimonial-message" className="text-gray-300 block mb-2">Your Experience</label>
+                <textarea
+                  id="testimonial-message"
+                  value={testimonialMessage}
+                  onChange={(e) => setTestimonialMessage(e.target.value)}
+                  className="w-full bg-slate-900/50 border border-gray-700 text-white focus:border-binance-gold rounded-md p-3 min-h-[120px]"
+                  required
+                  placeholder="Share your experience with BitSleuth..."
+                />
+              </div>
+              
+              <Button
+                type="submit"
+                disabled={sendingTestimonial}
+                className="w-full bg-gradient-to-r from-binance-gold to-yellow-600 text-black py-3 rounded-full font-semibold"
+              >
+                {sendingTestimonial ? "Submitting..." : "Submit Testimonial"}
+              </Button>
+              <p className="text-xs text-gray-400 text-center">
+                Your testimonial will be reviewed before appearing on the site
+              </p>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="glass border-b border-binance-gold/20">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">

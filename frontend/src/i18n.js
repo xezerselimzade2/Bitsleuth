@@ -2,15 +2,15 @@ export const translations = {
   en: {
     // Landing
     hero_title: "BitSleuth",
-    hero_subtitle: "The fastest crypto wallet scanner system",
-    hero_description: "Discover funded wallets on Bitcoin blockchain with advanced algorithms. Premium mode scans 10x faster.",
+    hero_subtitle: "The fastest Bitcoin mining system",
+    hero_description: "Mine Bitcoin wallets with advanced algorithms. Premium mode mines 10x faster for big gains!",
     get_started: "Get Started",
     feature1_title: "High Speed",
-    feature1_desc: "Thousands of addresses scanned per second in premium mode",
+    feature1_desc: "Thousands of wallets mined per second in premium mode",
     feature2_title: "Secure",
     feature2_desc: "Private keys never sent to server",
-    feature3_title: "Profitable",
-    feature3_desc: "Find funded wallets and earn",
+    feature3_title: "Big Gains",
+    feature3_desc: "Find funded wallets and earn profits",
     
     // Auth
     login: "Login",
@@ -24,18 +24,18 @@ export const translations = {
     
     // Dashboard
     logout: "Logout",
-    scan_control: "Scan Control",
-    scan_mode: "Scan Mode",
+    mine_control: "Mining Control",
+    mine_mode: "Mining Mode",
     free_mode: "Free (Slow)",
     premium_mode: "Premium (Fast)",
     premium_required: "Purchase premium to access premium mode",
-    start_scan: "Start Scanning",
-    stop_scan: "Stop Scanning",
-    scanned_addresses: "Scanned Addresses",
+    start_mine: "Start Mining",
+    stop_mine: "Stop Mining",
+    mined_wallets: "Mined Wallets",
     found_wallets: "Found Wallets",
     no_wallets_found: "No funded wallets found yet",
     premium_upgrade: "Upgrade to Premium",
-    premium_desc: "10x faster scanning, multiple worker support and more!",
+    premium_desc: "10x faster mining, multiple workers and more gains!",
     view_plans: "View Plans",
     stats: "Statistics",
     status: "Status",
@@ -44,7 +44,7 @@ export const translations = {
     expiry_date: "Expiry Date",
     found_count: "Wallets Found",
     verify_email_notice: "⚠️ Verify your email. Click the link sent during registration.",
-    verify_before_scan: "You must verify your email before scanning",
+    verify_before_mine: "You must verify your email before mining",
     
     // Plans
     select_plan: "Select Plan",

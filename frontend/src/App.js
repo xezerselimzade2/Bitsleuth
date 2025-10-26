@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
@@ -13,9 +13,19 @@ const API = `${BACKEND_URL}/api`;
 
 export { API };
 
+// Language Context
+const LanguageContext = createContext();
+
+export function useLanguage() {
+  return useContext(LanguageContext);
+}
+
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [language, setLanguage] = useState(
+    localStorage.getItem("language") || "en"
+  );
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -52,49 +62,60 @@ function App() {
     setUser(null);
   };
 
+  const changeLanguage = (lang) => {
+    setLanguage(lang);
+    localStorage.setItem("language", lang);
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-cyan-400 text-xl">Loading...</div>
+      <div className="min-h-screen bg-binance-dark flex items-center justify-center">
+        <div className="text-binance-gold text-xl">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="App">
-      <Toaster position="top-right" />
-      <BrowserRouter>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              user ? <Navigate to="/dashboard" /> : <LandingPage onLogin={login} />
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              user ? (
-                <Dashboard user={user} onLogout={logout} />
-              ) : (
-                <Navigate to="/" />
-              )
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              user && user.is_admin ? (
-                <AdminPanel user={user} onLogout={logout} />
-              ) : (
-                <Navigate to="/" />
-              )
-            }
-          />
-          <Route path="/verify" element={<VerifyEmail />} />
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <LanguageContext.Provider value={{ language, changeLanguage }}>
+      <div className="App">
+        <Toaster position="top-right" />
+        <BrowserRouter>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                user ? (
+                  <Navigate to="/dashboard" />
+                ) : (
+                  <LandingPage onLogin={login} />
+                )
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                user ? (
+                  <Dashboard user={user} onLogout={logout} />
+                ) : (
+                  <Navigate to="/" />
+                )
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                user && user.is_admin ? (
+                  <AdminPanel user={user} onLogout={logout} />
+                ) : (
+                  <Navigate to="/" />
+                )
+              }
+            />
+            <Route path="/verify" element={<VerifyEmail />} />
+          </Routes>
+        </BrowserRouter>
+      </div>
+    </LanguageContext.Provider>
   );
 }
 

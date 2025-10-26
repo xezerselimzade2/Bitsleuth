@@ -671,6 +671,8 @@ async def startup_event():
     await db.users.create_index("id", unique=True)
     await db.payments.create_index("invoice_id")
     await db.invoices.create_index("id", unique=True)
+    await db.support_messages.create_index("id", unique=True)
+    await db.testimonials.create_index("id", unique=True)
     
     # Create initial fake ads if none exist
     count = await db.fake_ads.count_documents({})

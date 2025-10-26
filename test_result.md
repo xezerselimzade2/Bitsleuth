@@ -109,63 +109,78 @@ user_problem_statement: |
 backend:
   - task: "Live BTC Price API"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added GET /api/price/btc endpoint using CoinGecko API"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: GET /api/price/btc returns valid BTC price ($113,431.00 USD) from CoinGecko API. Response format correct with price and currency fields."
 
   - task: "Support Messages API"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added POST /api/support/message (authenticated) and POST /api/support/message/public endpoints, GET /admin/support-messages and PATCH /admin/support-messages/{id}/resolve for admin"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Both public and authenticated support message endpoints working. Public endpoint accepts email+message, authenticated endpoint uses user token. Admin endpoints accessible with admin@bitsleuth.com account. Data persisted to MongoDB support_messages collection."
 
   - task: "Testimonials API"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added POST /api/testimonials/create, GET /api/testimonials/approved, GET /admin/testimonials, and PATCH /admin/testimonials/{id}/approve"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Testimonial creation works with authenticated users. GET /api/testimonials/approved returns empty array (no approved testimonials yet). Admin can view all testimonials via /admin/testimonials. Data persisted to MongoDB testimonials collection."
 
   - task: "Public Statistics API"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added GET /api/stats/public endpoint showing total_users, total_mined, total_found, active_miners"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: GET /api/stats/public returns correct statistics (Users: 2, Mined: 1,000,000, Found: 0, Active: 0). All required fields present with valid integer values."
 
   - task: "Database Models for Support and Testimonials"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added SupportMessage and Testimonial Pydantic models with database indices"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Database models working correctly. Support messages and testimonials are being persisted to MongoDB. Verified data integrity: 2 support messages, 1 testimonial, 3 users in database."
 
 frontend:
   - task: "Live BTC Price Ticker"

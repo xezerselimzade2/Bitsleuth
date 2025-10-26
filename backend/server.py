@@ -625,6 +625,45 @@ async def create_fake_ad(wallet_address: str, amount: float, admin: dict = Depen
     await db.fake_ads.insert_one(ad_doc)
     return {"message": "Fake ad created", "ad": ad_doc}
 
+@api_router.get("/admin/support-messages")
+async def admin_support_messages(admin: dict = Depends(get_admin_user), status: Optional[str] = None):
+    """Get all support messages"""
+    query = {"status": status} if status else {}
+    messages = await db.support_messages.find(query, {"_id": 0}).sort("created_at", DESCENDING).to_list(100)
+    return {"messages": messages}
+
+@api_router.patch("/admin/support-messages/{message_id}/resolve")
+async def resolve_support_message(message_id: str, admin: dict = Depends(get_admin_user)):
+    """Mark support message as resolved"""
+    result = await db.support_messages.update_one(
+        {"id": message_id},
+        {"$set": {"status": "resolved"}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Message not found")
+    
+    return {"message": "Support message resolved"}
+
+@api_router.get("/admin/testimonials")
+async def admin_testimonials(admin: dict = Depends(get_admin_user)):
+    """Get all testimonials"""
+    testimonials = await db.testimonials.find({}, {"_id": 0}).sort("created_at", DESCENDING).to_list(100)
+    return {"testimonials": testimonials}
+
+@api_router.patch("/admin/testimonials/{testimonial_id}/approve")
+async def approve_testimonial(testimonial_id: str, admin: dict = Depends(get_admin_user)):
+    """Approve a testimonial"""
+    result = await db.testimonials.update_one(
+        {"id": testimonial_id},
+        {"$set": {"approved": True}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Testimonial not found")
+    
+    return {"message": "Testimonial approved"}
+
 # ========== STARTUP ==========
 @app.on_event("startup")
 async def startup_event():

@@ -17,6 +17,75 @@ const LandingPage = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [btcPrice, setBtcPrice] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [testimonials, setTestimonials] = useState([]);
+  const [showSupport, setShowSupport] = useState(false);
+  const [supportMessage, setSupportMessage] = useState("");
+  const [supportEmail, setSupportEmail] = useState("");
+  const [sendingSupport, setSendingSupport] = useState(false);
+
+  useEffect(() => {
+    // Fetch BTC price
+    const fetchBtcPrice = async () => {
+      try {
+        const response = await axios.get(`${API}/price/btc`);
+        setBtcPrice(response.data.price);
+      } catch (error) {
+        console.error("Error fetching BTC price:", error);
+      }
+    };
+
+    // Fetch public stats
+    const fetchStats = async () => {
+      try {
+        const response = await axios.get(`${API}/stats/public`);
+        setStats(response.data);
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      }
+    };
+
+    // Fetch testimonials
+    const fetchTestimonials = async () => {
+      try {
+        const response = await axios.get(`${API}/testimonials/approved`);
+        setTestimonials(response.data.testimonials);
+      } catch (error) {
+        console.error("Error fetching testimonials:", error);
+      }
+    };
+
+    fetchBtcPrice();
+    fetchStats();
+    fetchTestimonials();
+
+    // Update BTC price every 60 seconds
+    const priceInterval = setInterval(fetchBtcPrice, 60000);
+    
+    return () => clearInterval(priceInterval);
+  }, []);
+
+  const handleSupportSubmit = async (e) => {
+    e.preventDefault();
+    setSendingSupport(true);
+
+    try {
+      await axios.post(`${API}/support/message/public`, {
+        email: supportEmail,
+        message: supportMessage
+      });
+      
+      toast.success("Support message sent successfully!");
+      setSupportMessage("");
+      setSupportEmail("");
+      setShowSupport(false);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to send message");
+    } finally {
+      setSendingSupport(false);
+    }
+  };
 
   const handleAuth = async (e) => {
     e.preventDefault();

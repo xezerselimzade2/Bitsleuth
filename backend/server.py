@@ -478,6 +478,109 @@ async def get_recent_ads():
     ads = await db.fake_ads.find({}, {"_id": 0}).sort("created_at", DESCENDING).limit(5).to_list(5)
     return {"ads": ads}
 
+@api_router.post("/support/message")
+async def create_support_message(data: SupportMessageRequest, user: dict = Depends(get_current_user)):
+    """Create a support message from user"""
+    support_msg = SupportMessage(
+        user_id=user['id'],
+        email=user['email'],
+        message=data.message
+    )
+    
+    msg_doc = support_msg.model_dump()
+    msg_doc['created_at'] = msg_doc['created_at'].isoformat()
+    
+    await db.support_messages.insert_one(msg_doc)
+    await log_audit(user['email'], "support_message_created", {"message_id": support_msg.id})
+    
+    return {"message": "Support message sent successfully", "id": support_msg.id}
+
+@api_router.post("/support/message/public")
+async def create_support_message_public(data: SupportMessageRequest):
+    """Create a support message from non-authenticated user"""
+    if not data.email:
+        raise HTTPException(status_code=400, detail="Email is required for public messages")
+    
+    support_msg = SupportMessage(
+        email=data.email,
+        message=data.message
+    )
+    
+    msg_doc = support_msg.model_dump()
+    msg_doc['created_at'] = msg_doc['created_at'].isoformat()
+    
+    await db.support_messages.insert_one(msg_doc)
+    
+    return {"message": "Support message sent successfully", "id": support_msg.id}
+
+@api_router.post("/testimonials/create")
+async def create_testimonial(data: TestimonialRequest, user: dict = Depends(get_current_user)):
+    """Create a testimonial (requires approval)"""
+    testimonial = Testimonial(
+        user_id=user['id'],
+        name=data.name,
+        message=data.message,
+        rating=min(max(data.rating, 1), 5)  # Clamp between 1-5
+    )
+    
+    test_doc = testimonial.model_dump()
+    test_doc['created_at'] = test_doc['created_at'].isoformat()
+    
+    await db.testimonials.insert_one(test_doc)
+    await log_audit(user['email'], "testimonial_created", {"testimonial_id": testimonial.id})
+    
+    return {"message": "Testimonial submitted for approval", "id": testimonial.id}
+
+@api_router.get("/testimonials/approved")
+async def get_approved_testimonials(limit: int = 10):
+    """Get approved testimonials"""
+    testimonials = await db.testimonials.find(
+        {"approved": True},
+        {"_id": 0}
+    ).sort("created_at", DESCENDING).limit(limit).to_list(limit)
+    
+    return {"testimonials": testimonials}
+
+@api_router.get("/stats/public")
+async def get_public_stats():
+    """Get public statistics"""
+    total_users = await db.users.count_documents({})
+    total_found = await db.audit_log.count_documents({"action": "funded_wallet_found"})
+    
+    # Calculate total mined (fake for now - would need tracking in real app)
+    total_mined = total_users * 500000  # Average scans per user
+    
+    # Active miners (users active in last 24 hours)
+    active_miners = await db.users.count_documents({
+        "last_active": {"$gte": (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()}
+    })
+    
+    return {
+        "total_users": total_users,
+        "total_mined": total_mined,
+        "total_found": total_found,
+        "active_miners": max(active_miners, int(total_users * 0.3))  # At least 30% shown as active
+    }
+
+@api_router.get("/price/btc")
+async def get_btc_price():
+    """Get current BTC price from CoinGecko"""
+    try:
+        url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    return {
+                        "price": data.get("bitcoin", {}).get("usd", 0),
+                        "currency": "USD"
+                    }
+                else:
+                    raise HTTPException(status_code=500, detail="Failed to fetch BTC price")
+    except Exception as e:
+        logger.error(f"Error fetching BTC price: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching BTC price")
+
 # ========== ADMIN ENDPOINTS ==========
 @api_router.get("/admin/stats")
 async def admin_stats(admin: dict = Depends(get_admin_user)):

@@ -2,11 +2,16 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API } from "@/App";
+import { useLanguage } from "@/App";
+import { useTranslation } from "@/i18n";
 import { Button } from "@/components/ui/button";
 
 const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const t = useTranslation(language);
+  
   const [status, setStatus] = useState("verifying");
   const [message, setMessage] = useState("");
 
@@ -14,7 +19,7 @@ const VerifyEmail = () => {
     const token = searchParams.get("token");
     if (!token) {
       setStatus("error");
-      setMessage("Geçersiz doğrulama linki");
+      setMessage("Invalid verification link");
       return;
     }
 
@@ -25,10 +30,10 @@ const VerifyEmail = () => {
     try {
       await axios.post(`${API}/auth/verify-email`, { token });
       setStatus("success");
-      setMessage("E-posta başarıyla doğrulandı!");
+      setMessage("Email verified successfully!");
     } catch (error) {
       setStatus("error");
-      setMessage(error.response?.data?.detail || "Doğrulama başarısız");
+      setMessage(error.response?.data?.detail || "Verification failed");
     }
   };
 
@@ -37,39 +42,39 @@ const VerifyEmail = () => {
       <div className="glass max-w-md w-full p-8 rounded-3xl text-center">
         {status === "verifying" && (
           <>
-            <div className="text-cyan-400 text-4xl mb-4">⏳</div>
-            <h2 className="text-2xl font-bold mb-2 neon-text">Doğrulanıyor...</h2>
-            <p className="text-slate-400">Lütfen bekleyin</p>
+            <div className="text-binance-gold text-4xl mb-4">⏳</div>
+            <h2 className="text-2xl font-bold mb-2 neon-text">Verifying...</h2>
+            <p className="text-gray-400">Please wait</p>
           </>
         )}
 
         {status === "success" && (
           <>
-            <div className="text-green-400 text-4xl mb-4">✓</div>
-            <h2 className="text-2xl font-bold mb-2 neon-text-green">Başarılı!</h2>
-            <p className="text-slate-300 mb-6">{message}</p>
+            <div className="text-binance-green text-4xl mb-4">✓</div>
+            <h2 className="text-2xl font-bold mb-2 neon-text-green">Success!</h2>
+            <p className="text-gray-300 mb-6">{message}</p>
             <Button
               data-testid="go-to-login-btn"
               onClick={() => navigate("/")}
-              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+              className="bg-gradient-to-r from-binance-gold to-yellow-600 hover:from-yellow-600 hover:to-binance-gold text-black"
             >
-              Giriş Yapmaya Git
+              {t.login}
             </Button>
           </>
         )}
 
         {status === "error" && (
           <>
-            <div className="text-red-400 text-4xl mb-4">✗</div>
-            <h2 className="text-2xl font-bold mb-2 text-red-400">Hata</h2>
-            <p className="text-slate-300 mb-6">{message}</p>
+            <div className="text-binance-red text-4xl mb-4">✗</div>
+            <h2 className="text-2xl font-bold mb-2 text-binance-red">Error</h2>
+            <p className="text-gray-300 mb-6">{message}</p>
             <Button
               data-testid="back-home-btn"
               onClick={() => navigate("/")}
               variant="outline"
-              className="border-slate-600"
+              className="border-gray-600"
             >
-              Ana Sayfaya Dön
+              {t.back_home}
             </Button>
           </>
         )}

@@ -23,6 +23,16 @@ const Dashboard = ({ user, onLogout }) => {
   const [txHash, setTxHash] = useState("");
   const [recentAds, setRecentAds] = useState([]);
   const workersRef = useRef([]);
+  
+  const [showSupport, setShowSupport] = useState(false);
+  const [supportMessage, setSupportMessage] = useState("");
+  const [sendingSupport, setSendingSupport] = useState(false);
+  
+  const [showTestimonial, setShowTestimonial] = useState(false);
+  const [testimonialName, setTestimonialName] = useState("");
+  const [testimonialMessage, setTestimonialMessage] = useState("");
+  const [testimonialRating, setTestimonialRating] = useState(5);
+  const [sendingTestimonial, setSendingTestimonial] = useState(false);
 
   useEffect(() => {
     fetchRecentAds();

@@ -1,0 +1,48 @@
+# PRODUCTION ENVIRONMENT VARIABLES
+# Copy these to Emergent Deployment Settings
+
+# ============================================
+# BACKEND ENVIRONMENT VARIABLES
+# ============================================
+
+# MongoDB (Emergent will provide this)
+MONGO_URL=<WILL_BE_PROVIDED_BY_EMERGENT>
+DB_NAME=bitsleuth_production
+
+# CORS (Update with your domain)
+CORS_ORIGINS=https://www.bit-sleuth.com,https://bit-sleuth.com
+
+# JWT Secret (CHANGE THIS - Use a strong random string)
+JWT_SECRET=CHANGE_THIS_TO_LONG_RANDOM_STRING_FOR_PRODUCTION
+
+# Bitcoin Configuration
+WALLET_BTC_ADDRESS=TSmGGiUm7EC77qfa4E6CaSFtn9GT2G5du8
+BLOCKCHAIN_API_BASE=https://blockchain.info
+REQUIRED_CONF=3
+
+# Telegram Configuration
+ADMIN_TELEGRAM_ID=6393075876
+TELEGRAM_BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN_HERE
+
+# Email SMTP (Optional - for email verification)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_app_password
+SMTP_FROM=noreply@bit-sleuth.com
+
+# ============================================
+# FRONTEND ENVIRONMENT VARIABLES
+# ============================================
+
+# Backend URL (Emergent will provide this)
+REACT_APP_BACKEND_URL=<WILL_BE_PROVIDED_BY_EMERGENT>
+
+# Socket port for WebSocket (keep as is)
+WDS_SOCKET_PORT=443
+
+# Visual edits (disable in production)
+REACT_APP_ENABLE_VISUAL_EDITS=false
+
+# Health check (disable in production)
+ENABLE_HEALTH_CHECK=false

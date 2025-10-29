@@ -82,7 +82,7 @@ const AdminPanel = ({ user, onLogout }) => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <Card className="glass p-4">
             <p className="text-gray-400 text-sm">{t.total_users}</p>
             <p className="text-2xl font-bold text-binance-gold">{stats?.total_users || 0}</p>
@@ -92,8 +92,12 @@ const AdminPanel = ({ user, onLogout }) => {
             <p className="text-2xl font-bold text-yellow-400">{stats?.premium_users || 0}</p>
           </Card>
           <Card className="glass p-4">
-            <p className="text-gray-400 text-sm">{t.total_payments}</p>
-            <p className="text-2xl font-bold text-binance-green">{stats?.total_payments || 0}</p>
+            <p className="text-gray-400 text-sm">Total Scans</p>
+            <p className="text-2xl font-bold text-blue-400">{(stats?.total_scans || 0).toLocaleString()}</p>
+          </Card>
+          <Card className="glass p-4">
+            <p className="text-gray-400 text-sm">Total Revenue</p>
+            <p className="text-2xl font-bold text-binance-green">${(stats?.total_revenue || 0).toFixed(2)}</p>
           </Card>
           <Card className="glass p-4">
             <p className="text-gray-400 text-sm">{t.confirmed}</p>
@@ -105,12 +109,71 @@ const AdminPanel = ({ user, onLogout }) => {
           </Card>
         </div>
 
-        <Tabs defaultValue="payments" className="w-full">
+        <Tabs defaultValue="users-detailed" className="w-full">
           <TabsList className="glass border border-binance-gold/20">
+            <TabsTrigger value="users-detailed">User Details</TabsTrigger>
             <TabsTrigger value="payments" data-testid="payments-tab">{t.payments}</TabsTrigger>
-            <TabsTrigger value="users" data-testid="users-tab">{t.users}</TabsTrigger>
+            <TabsTrigger value="users" data-testid="users-tab">All Users</TabsTrigger>
             <TabsTrigger value="audit" data-testid="audit-tab">{t.audit_log}</TabsTrigger>
           </TabsList>
+
+          {/* New Detailed Users Tab */}
+          <TabsContent value="users-detailed">
+            <Card className="glass p-6">
+              <h2 className="text-xl font-bold mb-4 text-binance-gold">📊 Detailed User Statistics</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-700">
+                      <th className="text-left py-3 px-2 text-gray-400">Email</th>
+                      <th className="text-right py-3 px-2 text-gray-400">Scans Used</th>
+                      <th className="text-right py-3 px-2 text-gray-400">Found</th>
+                      <th className="text-right py-3 px-2 text-gray-400">Total Paid</th>
+                      <th className="text-right py-3 px-2 text-gray-400">Payments</th>
+                      <th className="text-center py-3 px-2 text-gray-400">Status</th>
+                      <th className="text-center py-3 px-2 text-gray-400">Joined</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detailedUsers.map((user) => (
+                      <tr key={user.id} className="border-b border-gray-800 hover:bg-slate-900/30">
+                        <td className="py-3 px-2">
+                          <div>
+                            <p className="text-white">{user.email}</p>
+                            {user.is_admin && (
+                              <span className="text-xs bg-purple-600 px-2 py-0.5 rounded">ADMIN</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="text-right py-3 px-2 text-blue-400 font-mono">
+                          {(user.scans_used || 0).toLocaleString()}
+                        </td>
+                        <td className="text-right py-3 px-2 text-binance-green font-semibold">
+                          {user.total_found || 0}
+                        </td>
+                        <td className="text-right py-3 px-2 text-binance-gold font-mono">
+                          ${(user.total_paid || 0).toFixed(2)}
+                        </td>
+                        <td className="text-right py-3 px-2 text-gray-400">
+                          {user.payment_count || 0}
+                        </td>
+                        <td className="text-center py-3 px-2">
+                          {user.is_premium ? (
+                            <span className="text-xs bg-binance-gold text-black px-2 py-1 rounded">Premium</span>
+                          ) : (
+                            <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">Free</span>
+                          )}
+                        </td>
+                        <td className="text-center py-3 px-2 text-gray-500 text-xs">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="payments" data-testid="payments-content">
             <Card className="glass p-6">

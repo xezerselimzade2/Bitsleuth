@@ -17,6 +17,7 @@ const AdminPanel = ({ user, onLogout }) => {
   const [stats, setStats] = useState(null);
   const [payments, setPayments] = useState([]);
   const [users, setUsers] = useState([]);
+  const [detailedUsers, setDetailedUsers] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,16 +27,18 @@ const AdminPanel = ({ user, onLogout }) => {
 
   const fetchData = async () => {
     try {
-      const [statsRes, paymentsRes, usersRes, auditRes] = await Promise.all([
+      const [statsRes, paymentsRes, usersRes, detailedUsersRes, auditRes] = await Promise.all([
         axios.get(`${API}/admin/stats`),
         axios.get(`${API}/admin/payments`),
         axios.get(`${API}/admin/users`),
+        axios.get(`${API}/admin/users-detailed`),
         axios.get(`${API}/admin/audit-log`)
       ]);
       
       setStats(statsRes.data);
       setPayments(paymentsRes.data.payments);
       setUsers(usersRes.data.users);
+      setDetailedUsers(detailedUsersRes.data.users);
       setAuditLogs(auditRes.data.logs);
     } catch (error) {
       toast.error("Error loading data");

@@ -616,14 +616,54 @@ async def admin_stats(admin: dict = Depends(get_admin_user)):
     pending_payments = await db.payments.count_documents({"status": "pending"})
     found_wallets = await db.audit_log.count_documents({"action": "funded_wallet_found"})
     
+    # Calculate total revenue
+    payments = await db.payments.find({"status": "confirmed"}, {"_id": 0, "amount": 1}).to_list(1000)
+    total_revenue = sum(p.get("amount", 0) for p in payments)
+    
+    # Calculate total scans used across all users
+    users = await db.users.find({}, {"_id": 0, "scans_used": 1}).to_list(10000)
+    total_scans = sum(u.get("scans_used", 0) for u in users)
+    
     return {
         "total_users": total_users,
         "premium_users": premium_users,
         "total_payments": total_payments,
         "confirmed_payments": confirmed_payments,
         "pending_payments": pending_payments,
-        "found_wallets": found_wallets
+        "found_wallets": found_wallets,
+        "total_revenue": total_revenue,
+        "total_scans": total_scans
     }
+
+@api_router.get("/admin/users-detailed")
+async def admin_users_detailed(admin: dict = Depends(get_admin_user)):
+    """Get detailed user statistics with scans, payments, and found wallets"""
+    users = await db.users.find(
+        {},
+        {"_id": 0, "password": 0, "verification_token": 0}
+    ).sort("created_at", DESCENDING).to_list(1000)
+    
+    # Enrich with payment data
+    detailed_users = []
+    for user in users:
+        # Get user's payments
+        user_payments = await db.payments.find(
+            {"user_id": user['id'], "status": "confirmed"},
+            {"_id": 0, "amount": 1, "created_at": 1}
+        ).to_list(100)
+        
+        total_paid = sum(p.get("amount", 0) for p in user_payments)
+        payment_count = len(user_payments)
+        
+        detailed_users.append({
+            **user,
+            "total_paid": total_paid,
+            "payment_count": payment_count,
+            "scans_used": user.get("scans_used", 0),
+            "total_found": user.get("total_found", 0)
+        })
+    
+    return {"users": detailed_users}
 
 @api_router.get("/admin/payments")
 async def admin_payments(admin: dict = Depends(get_admin_user), status: Optional[str] = None):

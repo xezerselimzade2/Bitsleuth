@@ -126,6 +126,7 @@ const Dashboard = ({ user, onLogout }) => {
     });
     workersRef.current = [];
     setScanning(false);
+    setCurrentWallet(null);
   };
   
   const handleSupportSubmit = async (e) => {

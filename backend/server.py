@@ -61,7 +61,11 @@ class User(BaseModel):
     scan_quota: int = 10000
     is_premium: bool = False
     is_admin: bool = False
+    scans_used: int = 0  # Total scans performed
+    total_found: int = 0  # Total wallets found with balance
+    total_payments: float = 0.0  # Total payments in USDT
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_active: Optional[datetime] = None
 
 class Payment(BaseModel):
     model_config = ConfigDict(extra="ignore")

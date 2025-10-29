@@ -33,6 +33,10 @@ const Dashboard = ({ user, onLogout }) => {
   const [testimonialMessage, setTestimonialMessage] = useState("");
   const [testimonialRating, setTestimonialRating] = useState(5);
   const [sendingTestimonial, setSendingTestimonial] = useState(false);
+  
+  // Mining display states
+  const [currentWallet, setCurrentWallet] = useState(null); // {address, privateKey, balance}
+  const [walletHistory, setWalletHistory] = useState([]); // Last 10 wallets checked
 
   useEffect(() => {
     fetchRecentAds();

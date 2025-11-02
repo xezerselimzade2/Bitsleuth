@@ -28,7 +28,6 @@ db = client[os.environ.get('DB_NAME', 'bitsleuth')]
 
 # Config
 JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
-WALLET_BTC_ADDRESS = os.environ.get('WALLET_BTC_ADDRESS', '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa')
 ADMIN_TELEGRAM_ID = os.environ.get('ADMIN_TELEGRAM_ID', '6393075876')
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
 REQUIRED_CONF = int(os.environ.get('REQUIRED_CONF', '3'))

@@ -312,7 +312,7 @@ async def process_payment_confirmation(payment_doc: dict, current_block: int):
             await send_telegram_message(
                 f"💰 <b>Payment Confirmed</b>\n"
                 f"User: {user.get('email')}\n"
-                f"Amount: {payment_doc['amount']} BTC\n"
+                f"Amount: {payment_doc['amount']} USDT\n"
                 f"Plan: {plan}\n"
                 f"TX: {payment_doc.get('tx_hash', 'N/A')}"
             )

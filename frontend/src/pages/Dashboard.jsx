@@ -41,6 +41,7 @@ const Dashboard = ({ user, onLogout }) => {
 
   useEffect(() => {
     fetchRecentAds();
+    fetchPaymentPlans();
     return () => {
       workersRef.current.forEach(w => w.terminate());
     };
@@ -52,6 +53,15 @@ const Dashboard = ({ user, onLogout }) => {
       setRecentAds(response.data.ads || []);
     } catch (error) {
       console.error("Error fetching ads:", error);
+    }
+  };
+
+  const fetchPaymentPlans = async () => {
+    try {
+      const response = await axios.get(`${API}/payment/plans`);
+      setPaymentPlans(response.data.plans || []);
+    } catch (error) {
+      console.error("Error fetching payment plans:", error);
     }
   };
 

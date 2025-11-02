@@ -151,6 +151,26 @@ class TestimonialRequest(BaseModel):
     message: str
     rating: int = 5
 
+class PaymentPlan(BaseModel):
+    plan_id: str
+    name: str
+    price_usdt: float  # USDT TRC20 price
+    scans: Optional[int] = None  # None for unlimited
+    duration_days: Optional[int] = None  # For daily/weekly/monthly
+    
+# Payment plans with USDT TRC20
+PAYMENT_PLANS = {
+    "10k": PaymentPlan(plan_id="10k", name="10,000 Scans", price_usdt=5.0, scans=10000),
+    "50k": PaymentPlan(plan_id="50k", name="50,000 Scans", price_usdt=20.0, scans=50000),
+    "100k": PaymentPlan(plan_id="100k", name="100,000 Scans", price_usdt=35.0, scans=100000),
+    "1day": PaymentPlan(plan_id="1day", name="Unlimited Daily", price_usdt=30.0, duration_days=1),
+    "1week": PaymentPlan(plan_id="1week", name="Unlimited Weekly", price_usdt=150.0, duration_days=7),
+    "1month": PaymentPlan(plan_id="1month", name="Unlimited Monthly", price_usdt=500.0, duration_days=30),
+}
+
+# USDT TRC20 Wallet Address (Tron Network)
+USDT_WALLET_ADDRESS = os.environ.get("WALLET_TRON_ADDRESS", "TSmGGiUm7EC77qfa4E6CaSFtn9GT2G5du8")
+
 # ========== HELPER FUNCTIONS ==========
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')

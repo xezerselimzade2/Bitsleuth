@@ -89,7 +89,7 @@ class Invoice(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
     expected_amount: float
-    currency: str = "BTC"
+    currency: str = "USDT"
     plan: str
     status: str = "pending"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

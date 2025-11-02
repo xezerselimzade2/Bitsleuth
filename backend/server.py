@@ -333,6 +333,7 @@ async def register(data: UserRegister, background_tasks: BackgroundTasks):
     
     user = User(
         email=data.email,
+        email_verified=True,  # Auto-verify for smooth UX
         is_admin=(data.email == "admin@bitsleuth.com")
     )
     
@@ -344,7 +345,7 @@ async def register(data: UserRegister, background_tasks: BackgroundTasks):
     await db.users.insert_one(user_doc)
     await log_audit(data.email, "user_registered", {"user_id": user.id})
     
-    return {"message": "Registration successful. Please check your email to verify.", "user_id": user.id}
+    return {"message": "Registration successful. You can now login!", "user_id": user.id}
 
 @api_router.post("/auth/login")
 async def login(data: UserLogin):

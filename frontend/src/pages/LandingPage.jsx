@@ -407,7 +407,7 @@ const LandingPage = ({ onLogin }) => {
                         <span className="transform group-open:rotate-180 transition-transform">▼</span>
                       </summary>
                       <p className="text-gray-400 mt-4">
-                        We accept Bitcoin (BTC) payments directly. Simply select your preferred plan, and you'll receive a Bitcoin address to send the payment to. Access is granted after blockchain confirmation.
+                        We accept USDT (TRC20) payments on the Tron network. Simply select your preferred plan, and you'll receive a Tron wallet address to send the USDT payment to. Access is granted after network confirmation.
                       </p>
                     </details>
 

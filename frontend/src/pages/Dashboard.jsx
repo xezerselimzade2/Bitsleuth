@@ -379,11 +379,7 @@ const Dashboard = ({ user, onLogout }) => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {!user.email_verified && (
-          <div className="glass border-yellow-500/50 p-4 rounded-lg mb-6">
-            <p className="text-yellow-400">{t.verify_email_notice}</p>
-          </div>
-        )}
+        {/* Email verification notice removed - auto verified */}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Scanning control */}

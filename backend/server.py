@@ -395,19 +395,15 @@ async def get_me(user: dict = Depends(get_current_user)):
 
 @api_router.post("/invoices/create")
 async def create_invoice(data: CreateInvoiceRequest, user: dict = Depends(get_current_user)):
-    prices = {
-        "1week": 0.001,
-        "1month": 0.003,
-        "3months": 0.008
-    }
-    
-    if data.plan not in prices:
+    if data.plan not in PAYMENT_PLANS:
         raise HTTPException(status_code=400, detail="Invalid plan")
+    
+    plan = PAYMENT_PLANS[data.plan]
     
     invoice = Invoice(
         user_id=user['id'],
-        expected_amount=prices[data.plan],
-        currency="BTC",
+        expected_amount=plan.price_usdt,
+        currency="USDT",
         plan=data.plan
     )
     
@@ -420,10 +416,10 @@ async def create_invoice(data: CreateInvoiceRequest, user: dict = Depends(get_cu
     return {
         "invoice_id": invoice.id,
         "amount": invoice.expected_amount,
-        "currency": "BTC",
-        "wallet_address": WALLET_BTC_ADDRESS,
+        "currency": "USDT",
+        "wallet_address": USDT_WALLET_ADDRESS,
         "plan": data.plan,
-        "message": "Please send exact amount to the wallet address. Payment will be confirmed after 3 blocks."
+        "message": "Please send exact USDT amount (TRC20) to the Tron wallet address. Payment will be confirmed after network confirmation."
     }
 
 @api_router.get("/invoices/{invoice_id}")

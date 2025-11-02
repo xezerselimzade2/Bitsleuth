@@ -73,14 +73,13 @@ const Dashboard = ({ user, onLogout }) => {
 
     setScanning(true);
     setScannedCount(0);
+    setWalletHistory([]);
+    setCurrentWallet(null);
     
     const workerCount = scanMode === "premium" ? Math.min(8, navigator.hardwareConcurrency || 4) : 1;
     
     for (let i = 0; i < workerCount; i++) {
-      const worker = new Worker(
-        new URL("../workers/bitcoinScanWorker.js", import.meta.url),
-        { type: "module" }
-      );
+      const worker = new Worker("/bitcoinScanWorker.js");
       
       worker.onmessage = async (e) => {
         const { address, privateKey } = e.data;

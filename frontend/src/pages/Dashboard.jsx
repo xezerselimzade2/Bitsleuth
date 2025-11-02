@@ -18,7 +18,8 @@ const Dashboard = ({ user, onLogout }) => {
   const [foundWallets, setFoundWallets] = useState([]);
   const [scanMode, setScanMode] = useState(user.is_premium ? "premium" : "free");
   const [showInvoice, setShowInvoice] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState("1month");
+  const [selectedPlan, setSelectedPlan] = useState("1week");
+  const [paymentPlans, setPaymentPlans] = useState([]);
   const [invoice, setInvoice] = useState(null);
   const [txHash, setTxHash] = useState("");
   const [recentAds, setRecentAds] = useState([]);

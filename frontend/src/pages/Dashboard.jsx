@@ -581,33 +581,18 @@ const Dashboard = ({ user, onLogout }) => {
                   <>
                     <h3 className="text-xl font-bold mb-3 text-binance-gold">{t.select_plan}</h3>
                     <div className="space-y-3">
-                      <Button
-                        data-testid="plan-1week-btn"
-                        onClick={() => setSelectedPlan("1week")}
-                        variant={selectedPlan === "1week" ? "default" : "outline"}
-                        className="w-full justify-between"
-                      >
-                        <span>1 {t.week}</span>
-                        <span>0.001 BTC</span>
-                      </Button>
-                      <Button
-                        data-testid="plan-1month-btn"
-                        onClick={() => setSelectedPlan("1month")}
-                        variant={selectedPlan === "1month" ? "default" : "outline"}
-                        className="w-full justify-between"
-                      >
-                        <span>1 {t.month}</span>
-                        <span>0.003 BTC</span>
-                      </Button>
-                      <Button
-                        data-testid="plan-3months-btn"
-                        onClick={() => setSelectedPlan("3months")}
-                        variant={selectedPlan === "3months" ? "default" : "outline"}
-                        className="w-full justify-between"
-                      >
-                        <span>3 {t.months}</span>
-                        <span>0.008 BTC</span>
-                      </Button>
+                      {paymentPlans.map((plan) => (
+                        <Button
+                          key={plan.plan_id}
+                          data-testid={`plan-${plan.plan_id}-btn`}
+                          onClick={() => setSelectedPlan(plan.plan_id)}
+                          variant={selectedPlan === plan.plan_id ? "default" : "outline"}
+                          className="w-full justify-between"
+                        >
+                          <span>{plan.name}</span>
+                          <span>${plan.price_usdt} USDT</span>
+                        </Button>
+                      ))}
                     </div>
                     <Button
                       data-testid="create-invoice-btn"

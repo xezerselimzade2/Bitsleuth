@@ -384,8 +384,8 @@ const Dashboard = ({ user, onLogout }) => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Scanning control */}
           <div className="lg:col-span-2 space-y-6">
-            <Card data-testid="scan-control-card" className="glass p-6">
-              <h2 className="text-2xl font-bold mb-4 text-binance-gold">{t.scan_control}</h2>
+            <Card data-testid="scan-control-card" className="glass p-6" style={{background: 'white', border: '2px solid #F0B90B'}}>
+              <h2 className="text-2xl font-bold mb-4" style={{color: '#F0B90B'}}>⚙️ Mining Control</h2>
               
               <div className="space-y-4">
                 <div>

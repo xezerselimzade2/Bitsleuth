@@ -76,7 +76,7 @@ class Payment(BaseModel):
     from_address: Optional[str] = None
     to_address: str
     amount: float = 0.0
-    currency: str = "BTC"
+    currency: str = "USDT"
     expected_amount: float
     status: str = "pending"
     confirmations: int = 0

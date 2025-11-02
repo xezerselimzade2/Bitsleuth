@@ -392,6 +392,20 @@ async def get_me(user: dict = Depends(get_current_user)):
         "scan_quota": user.get('scan_quota', 10000)
     }
 
+@api_router.get("/payment/plans")
+async def get_payment_plans():
+    """Get available payment plans"""
+    plans = []
+    for plan_id, plan in PAYMENT_PLANS.items():
+        plans.append({
+            "plan_id": plan.plan_id,
+            "name": plan.name,
+            "price_usdt": plan.price_usdt,
+            "scans": plan.scans,
+            "duration_days": plan.duration_days
+        })
+    return {"plans": plans}
+
 @api_router.post("/invoices/create")
 async def create_invoice(data: CreateInvoiceRequest, user: dict = Depends(get_current_user)):
     if data.plan not in PAYMENT_PLANS:

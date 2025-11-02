@@ -608,7 +608,7 @@ const Dashboard = ({ user, onLogout }) => {
                     <div className="space-y-3 text-sm">
                       <div>
                         <p className="text-gray-400">{t.amount}</p>
-                        <p className="text-white font-mono text-lg">{invoice.amount} BTC</p>
+                        <p className="text-white font-mono text-lg">{invoice.amount} USDT</p>
                       </div>
                       <div>
                         <p className="text-gray-400">{t.wallet_address}</p>

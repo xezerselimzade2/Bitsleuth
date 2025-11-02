@@ -66,10 +66,11 @@ const Dashboard = ({ user, onLogout }) => {
   };
 
   const startScanning = () => {
-    if (!user.email_verified) {
-      toast.error(t.verify_before_scan);
-      return;
-    }
+    // Email verification kontrolünü kaldırdık - direkt mining başlasın
+    // if (!user.email_verified) {
+    //   toast.error(t.verify_before_scan);
+    //   return;
+    // }
 
     setScanning(true);
     setScannedCount(0);

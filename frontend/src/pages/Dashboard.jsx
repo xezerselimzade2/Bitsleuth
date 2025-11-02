@@ -420,17 +420,17 @@ const Dashboard = ({ user, onLogout }) => {
                     <Button
                       data-testid="start-scan-btn"
                       onClick={startScanning}
-                      className="w-full bg-gradient-to-r from-binance-green to-green-600 hover:from-green-600 hover:to-binance-green text-white py-6 text-lg font-semibold rounded-xl"
+                      className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-500 text-white py-6 text-lg font-semibold rounded-xl"
                     >
-                      {t.start_scan}
+                      ⚡ Start Mining
                     </Button>
                   ) : (
                     <Button
                       data-testid="stop-scan-btn"
                       onClick={stopScanning}
-                      className="w-full bg-gradient-to-r from-binance-red to-red-600 hover:from-red-600 hover:to-binance-red text-white py-6 text-lg font-semibold rounded-xl"
+                      className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-500 text-white py-6 text-lg font-semibold rounded-xl"
                     >
-                      {t.stop_scan}
+                      ⏹ Stop Mining
                     </Button>
                   )}
                 </div>
